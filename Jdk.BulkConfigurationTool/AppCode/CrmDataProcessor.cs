@@ -1,8 +1,6 @@
 ﻿using Jdk.BulkConfigurationTool.Helpers;
-using Microsoft.Crm.Sdk.Messages;
 using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Messages;
-using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -26,6 +24,26 @@ namespace Jdk.BulkConfigurationTool.AppCode
         public IOrganizationService Service { get; set; }
 
         public abstract void ProcessData();
+
+        protected int ExecuteRequests(OrganizationRequestCollection requests)
+        {
+            var successfulRequests = 0;
+            foreach (var request in requests)
+            {
+                try
+                {
+                    var response = Service.Execute(request);
+                    var message = InvokeResponseTypeHandler(response, request);
+                    OnRaiseSuccess(message);
+                    successfulRequests++;
+                }
+                catch (FaultException<OrganizationServiceFault> fault)
+                {
+                    OnRaiseError(fault.Message);
+                }
+            }
+            return successfulRequests;
+        }
 
         protected int ExecuteBatch(ExecuteMultipleRequest batchRequest)
         {

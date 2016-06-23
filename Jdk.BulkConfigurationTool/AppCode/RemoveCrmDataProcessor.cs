@@ -24,37 +24,21 @@ namespace Jdk.BulkConfigurationTool.AppCode
 
             if (attributeData.Count > 0 || oneToManyData.Count > 0 || manyToManyData.Count > 0)
             {
-                var batch = new ExecuteMultipleRequest
-                {
-                    Settings = new ExecuteMultipleSettings
-                    {
-                        ContinueOnError = true,
-                        ReturnResponses = true
-                    },
-                    Requests = new OrganizationRequestCollection()
-                };
-                batch.Requests.AddRange(MapDataToRequests(MapAttributes, attributeData));
-                batch.Requests.AddRange(MapDataToRequests(MapOneToMany, oneToManyData));
-                batch.Requests.AddRange(MapDataToRequests(MapManyToMany, manyToManyData));
-                successfulRequests += ExecuteBatch(batch);
+                var attributeRelationshipRequests = new OrganizationRequestCollection();
+                attributeRelationshipRequests.AddRange(MapDataToRequests(MapAttributes, attributeData));
+                attributeRelationshipRequests.AddRange(MapDataToRequests(MapOneToMany, oneToManyData));
+                attributeRelationshipRequests.AddRange(MapDataToRequests(MapManyToMany, manyToManyData));
+                successfulRequests = ExecuteRequests(attributeRelationshipRequests);
             }
 
             var optionSetData = InputFile.Worksheets[ConfigurationFile.WorkSheets.OptionSets].Data;
             var entityData = InputFile.Worksheets[ConfigurationFile.WorkSheets.Entities].Data;
             if (entityData.Count > 0 || optionSetData.Count > 0)
             {
-                var entitiesBatch = new ExecuteMultipleRequest
-                {
-                    Settings = new ExecuteMultipleSettings
-                    {
-                        ContinueOnError = true,
-                        ReturnResponses = true
-                    },
-                    Requests = new OrganizationRequestCollection()
-                };
-                entitiesBatch.Requests.AddRange(MapDataToRequests(MapEntities, entityData));
-                entitiesBatch.Requests.AddRange(MapDataToRequests(MapOptionSets, optionSetData));
-                successfulRequests = ExecuteBatch(entitiesBatch);
+                var entitiesRequests = new OrganizationRequestCollection();
+                entitiesRequests.AddRange(MapDataToRequests(MapEntities, entityData));
+                entitiesRequests.AddRange(MapDataToRequests(MapOptionSets, optionSetData));
+                successfulRequests = ExecuteRequests(entitiesRequests);
             }
 
             if (successfulRequests > 0)

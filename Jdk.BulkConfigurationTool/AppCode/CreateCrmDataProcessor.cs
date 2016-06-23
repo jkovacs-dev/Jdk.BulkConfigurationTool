@@ -26,20 +26,12 @@ namespace Jdk.BulkConfigurationTool.AppCode
             var entityData = InputFile.Worksheets[ConfigurationFile.WorkSheets.Entities].Data;
             if (entityData.Count > 0 || optionSetData.Count > 0)
             {
-                var entitiesBatch = new ExecuteMultipleRequest
-                {
-                    Settings = new ExecuteMultipleSettings
-                    {
-                        ContinueOnError = true,
-                        ReturnResponses = true
-                    },
-                    Requests = new OrganizationRequestCollection()
-                };
+                var entityRequests = new OrganizationRequestCollection();
                 var entityMapper = new CreateEntityRequestDataMapper(InputFile.Worksheets[ConfigurationFile.WorkSheets.Entities].Columns, OrgLcId);
-                entitiesBatch.Requests.AddRange(MapDataToRequests(entityMapper, entityData));
+                entityRequests.AddRange(MapDataToRequests(entityMapper, entityData));
                 var optionSetMapper = new CreateOptionSetRequestDataMapper(InputFile.Worksheets[ConfigurationFile.WorkSheets.OptionSets].Columns, OrgLcId);
-                entitiesBatch.Requests.AddRange(MapDataToRequests(optionSetMapper, optionSetData));
-                successfulRequests = ExecuteBatch(entitiesBatch);
+                entityRequests.AddRange(MapDataToRequests(optionSetMapper, optionSetData));
+                successfulRequests = ExecuteRequests(entityRequests);
             }
             var attributeData = InputFile.Worksheets[ConfigurationFile.WorkSheets.Attributes].Data;
             var oneToManyData = InputFile.Worksheets[ConfigurationFile.WorkSheets.OneToManyRelationships].Data;
@@ -47,22 +39,14 @@ namespace Jdk.BulkConfigurationTool.AppCode
 
             if (attributeData.Count > 0 || oneToManyData.Count > 0 || manyToManyData.Count > 0)
             {
-                var batch = new ExecuteMultipleRequest
-                {
-                    Settings = new ExecuteMultipleSettings
-                    {
-                        ContinueOnError = true,
-                        ReturnResponses = true
-                    },
-                    Requests = new OrganizationRequestCollection()
-                };
+                var otherRequests = new OrganizationRequestCollection();
                 var attributeMapper = new CreateAttributeRequestDataMapper(InputFile.Worksheets[ConfigurationFile.WorkSheets.Attributes].Columns, OrgLcId);
-                batch.Requests.AddRange(MapDataToRequests(attributeMapper, attributeData));
+                otherRequests.AddRange(MapDataToRequests(attributeMapper, attributeData));
                 var oneToManyMapper = new CreateOneToManyRequestDataMapper(InputFile.Worksheets[ConfigurationFile.WorkSheets.OneToManyRelationships].Columns, OrgLcId);
-                batch.Requests.AddRange(MapDataToRequests(oneToManyMapper, oneToManyData));
+                otherRequests.AddRange(MapDataToRequests(oneToManyMapper, oneToManyData));
                 var manyToManyMapper = new CreateManyToManyRequestDataMapper(InputFile.Worksheets[ConfigurationFile.WorkSheets.ManyToManyRelationships].Columns, OrgLcId);
-                batch.Requests.AddRange(MapDataToRequests(manyToManyMapper, manyToManyData));
-                successfulRequests += ExecuteBatch(batch);
+                otherRequests.AddRange(MapDataToRequests(manyToManyMapper, manyToManyData));
+                successfulRequests += ExecuteRequests(otherRequests);
             }
             if (successfulRequests > 0)
             {
